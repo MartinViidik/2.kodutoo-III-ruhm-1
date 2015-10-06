@@ -16,7 +16,7 @@
 	$reg_username_error = "";
 	
 	//muutujad andmebaasi väärtuste jaoks
-	$username = ""; $email = ""; $password = "";
+	$username = ""; $email = ""; $password = ""; $username_or_email = "";
 	$reg_username = ""; $reg_email = ""; $reg_password = "";
 	
 	//echo $_POST["email"];
@@ -31,29 +31,20 @@
 		//************************************************************
 		if(isset($_POST["login"])){
 				
-			if (empty($_POST["email"]) ) {
-				$email_error = "This field is required";
-			}else{
-				// kõik korras
-				// test_input eemaldab pahataltikud osad
-				$email = test_input($_POST["email"]);
-				
-				}
-				
-			if (empty($_POST["username"]) ) {
-				$username_error = "This field is required";
-				
-			}else{
-				
-				$username = test_input($_POST["username"]);
-				
-				}
+			if (empty($_POST["username_or_email"]) ) {
+                $username_error = "This field is required";
+
+            }else{
+
+                $username_or_email = test_input($_POST["username_or_email"]);
+
+                }
 				
 			if (empty($_POST["password"]) ) {
 				$password_error = "This field is required";
 			}else{
 			
-				$password = test_input($_POST["password"]);
+				$password = cleanInput($_POST["password"]);
 				
 			}
 			// kontrollin et ei oleks ühtegi errorit
@@ -61,8 +52,8 @@
 				
 			$hash = hash("sha512", $password);
 			
-			$stmt = $mysqli->prepare("SELECT id, email, username FROM martin_login2 WHERE email=?, username=? AND password=?");
-			$stmt->bind_param("sss",$email, $username, $password, $hash);
+			$stmt = $mysqli->prepare("SELECT id, email, username FROM martin_login2 WHERE (email=? OR username=?) AND password=?");
+			$stmt->bind_param("sss",$username_or_email, $username_or_email, $hash);
 			
 			// Muutujad tulemustele
 			$stmt->bind_result($id_from_db, $username_from_db, $email_from_db);
@@ -71,10 +62,10 @@
 			//Kontrollin kas tulemusi leiti
 				if($stmt->fetch()){
 					//andmebaasis oli midagi
-						echo "Email, username ja parool õiged, kasutaja id=".$id_from_db;
+						echo "Account created";
 					}else{
 						// ei leidnud
-						echo "Valed andmed!";
+						echo "Wrong credentials!";
 				}
 				
 				$stmt->close();
@@ -123,7 +114,7 @@
 				$hash = hash("sha512", $reg_password);
 				
 				// Salvestame andmebaasi"
-				$stmt =  $mysqli->prepare("INSERT INTO martin_login2 (email, username, password) VALUES (?,?,?)");
+				$stmt =  $mysqli->prepare("INSERT INTO martin_login (email, username, password) VALUES (?,?,?)");
 				// Asendame küsimärgid õigete andmetega
 				$stmt->bind_param("sss", $reg_email, $reg_username, $hash);
 				$stmt->execute();
@@ -153,12 +144,11 @@
 
 	<h2>Log in</h2>
 		
-		<form action="login.php" method="post" >
-			<input name="username" type="text" placeholder="username"> <?php echo $username_error; ?><br> <br>
-			<input name="email" type="email" placeholder="email"> <?php echo $email_error; ?><br> <br>
-			<input name="password" type="password" placeholder="Password"> <?php echo $password_error; ?> <br> <br>
-			<input name="login" type="submit" value="Log in"> <br> <br>
-		</form>
+	<form action="login.php" method="post" >
+		<input name="username_or_email" type="text" placeholder="username or email"> <?php echo $username_error; ?><br> <br>
+		<input name="password" type="password" placeholder="Password"> <?php echo $password_error; ?> <br> <br>
+		<input name="login" type="submit" value="Log in"> <br> <br>
+	</form>
 	
 	<h2>Create user</h2>
 	
