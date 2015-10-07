@@ -36,7 +36,7 @@
 
             }else{
 
-                $username_or_email = test_input($_POST["username_or_email"]);
+                $username_or_email = cleanInput($_POST["username_or_email"]);
 
                 }
 				
